@@ -1,0 +1,80 @@
+pipeline:
+  name: pipeline-m
+  identifier: pipelinem
+  projectIdentifier: SFTY_Training
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: githubnewm
+        build: <+input>
+  stages:
+    - stage:
+        name: github-stage-m
+        identifier: githubstagem
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Docker
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: BuildAndPushDockerRegistry_1
+                  identifier: BuildAndPushDockerRegistry_1
+                  spec:
+                    connectorRef: dockerregistryconnectorm
+                    repo: manasa1docker/img123
+                    tags:
+                      - v1
+                    dockerfile: Dockerfile
+                    context: .
+    - stage:
+        name: custom-docker-m
+        identifier: customdockerm
+        description: ""
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: ShellScript
+                  name: ShellScript_1
+                  identifier: ShellScript_1
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: |-
+                          set -e 
+
+                          IMAGE="manasa1dockerimg123:latest"
+                          CONTAINER_NAME="myapp"
+
+                          echo "Puliing latest image...."
+                          docker pull $IMAGE
+
+                          echo "Stopping old container (if running)."
+                          docker rm -f $CONTAINER_NME || true
+
+                          echo "starting new container..."
+                          docker run -d --name $CONTAINER_NAME -P 8123:8123 --restart unless-stopped $IMAGE
+
+                          echo "Deployment completed!"
+                          docker ps | grep $CONTAINER_NAME
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 10m
+        tags: {}
